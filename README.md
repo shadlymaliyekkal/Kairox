@@ -39,7 +39,7 @@ This installs:
 
 ## USAGE
 
-python kairox.py
+Run kairox
 
 ### Steps
 
