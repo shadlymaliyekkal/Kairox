@@ -27,8 +27,7 @@ cd kairox
 
 ### 2. Run installer
 
-chmod +x install.sh
-./install.sh
+sed -i 's/\r$//' install.sh && chmod +x install.sh && ./install.sh
 
 This installs:
 
