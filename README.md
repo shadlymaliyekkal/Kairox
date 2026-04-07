@@ -38,6 +38,7 @@ This installs:
 ---
 
 ## USAGE
+chmod +x kairox
 
 Run kairox
 
