@@ -2,6 +2,7 @@
 
 # Auto-fix line endings (self-heal if CRLF)
 
+
 sed -i 's/\r$//' "$0" 2>/dev/null || true
 
 set -e
