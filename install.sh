@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
-# Auto-fix line endings (self-heal if CRLF)
+set -euo pipefail
 
-
-sed -i 's/\r$//' "$0" 2>/dev/null || true
-
-set -e
-
-echo "[+] Starting KAIROX setup..."
+echo "[+] KAIROX Installer Started"
 
 # -------------------------------
 
@@ -15,20 +10,21 @@ echo "[+] Starting KAIROX setup..."
 
 # -------------------------------
 
+echo "[+] Updating system..."
 sudo apt update -y
 
 # -------------------------------
 
-# Install base packages
+# Install base dependencies
 
 # -------------------------------
 
-echo "[+] Installing dependencies..."
-sudo apt install -y git curl wget python3-pip python3-venv nmap
+echo "[+] Installing required packages..."
+sudo apt install -y git curl wget python3 python3-pip python3-venv nmap
 
 # -------------------------------
 
-# Setup virtual environment
+# Setup Python virtual environment
 
 # -------------------------------
 
@@ -40,26 +36,19 @@ fi
 
 source venv/bin/activate
 
-# -------------------------------
-
-# Install Python dependencies
-
-# -------------------------------
-
-echo "[+] Installing Python packages..."
+echo "[+] Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
 # -------------------------------
 
-# Install Go (if missing)
+# Install Go if not installed
 
 # -------------------------------
 
 echo "[+] Checking Go installation..."
 
-if ! command -v go &> /dev/null
-then
+if ! command -v go >/dev/null 2>&1; then
 echo "[+] Installing Go..."
 wget -q https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
 sudo rm -rf /usr/local/go
@@ -70,7 +59,7 @@ else
 echo "[+] Go already installed"
 fi
 
-export PATH=$PATH:$(go env GOPATH)/bin
+export PATH="$PATH:$(go env GOPATH)/bin"
 
 # -------------------------------
 
@@ -91,23 +80,19 @@ go install github.com/owasp-amass/amass/v4/...@master
 
 # -------------------------------
 
-echo "[+] Verifying tools..."
+echo "[+] Verifying installation..."
 
-TOOLS=("subfinder" "amass" "httpx" "gau" "nmap")
-
-for tool in "${TOOLS[@]}"
-do
-if command -v $tool &> /dev/null
-then
-echo "[+] $tool ready"
+for tool in subfinder amass httpx gau nmap; do
+if command -v "$tool" >/dev/null 2>&1; then
+echo "[+] $tool OK"
 else
 echo "[!] $tool missing"
 fi
 done
 
 echo ""
-echo "[+] Setup completed successfully"
+echo "[+] Setup Completed Successfully"
 echo ""
-echo "To run KAIROX:"
+echo "Run KAIROX with:"
 echo "source venv/bin/activate"
 echo "python kairox.py"
