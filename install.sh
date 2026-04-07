@@ -141,8 +141,6 @@ fi
 
 echo ""
 echo "Run KAIROX with:"
-echo "  source venv/bin/activate"
-echo "  python kairox.py"
-echo ""
-echo "Or directly:"
-echo "  $VENV_PYTHON $SCRIPT_DIR/kairox.py"
+echo "Give Permission to kairox"
+echo "Then Run kairox"
+echo "Refer README For More Information"
