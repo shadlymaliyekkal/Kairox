@@ -13,23 +13,27 @@ console = Console()
 
 # -----------------------------
 
-# Auto environment handling
+# ENV FIX (CRITICAL)
 
 # -----------------------------
 
-# Fix PATH for Go tools
+# Ensure Go tools are always available
 
-os.environ["PATH"] += os.pathsep + os.path.expanduser("~/go/bin")
+go_path = os.path.expanduser("~/go/bin")
+if go_path not in os.environ.get("PATH", ""):
+os.environ["PATH"] += os.pathsep + go_path
 
 # Auto switch to venv if not already
 
-venv_python = os.path.join(os.path.dirname(**file**), "venv", "bin", "python")
-if sys.executable != venv_python and os.path.exists(venv_python):
+BASE_DIR = os.path.dirname(os.path.abspath(**file**))
+venv_python = os.path.join(BASE_DIR, "venv", "bin", "python")
+
+if os.path.exists(venv_python) and sys.executable != venv_python:
 os.execv(venv_python, [venv_python] + sys.argv)
 
 # -----------------------------
 
-# Tool Info
+# TOOL INFO
 
 # -----------------------------
 
@@ -58,15 +62,10 @@ border_style="red"
 ))
 
 def confirm():
-while True:
 choice = Prompt.ask("[yellow]Proceed? (yes/no)[/yellow]").lower()
-if choice in ["yes", "y"]:
-return
-elif choice in ["no", "n"]:
+if choice not in ["yes", "y"]:
 console.print("[red]Exiting...[/red]")
 sys.exit()
-else:
-console.print("[red]Invalid input[/red]")
 
 def get_target():
 if len(sys.argv) > 1:
@@ -75,7 +74,7 @@ return Prompt.ask("[cyan]Enter target domain[/cyan]")
 
 # -----------------------------
 
-# Dependency Check
+# DEPENDENCY CHECK
 
 # -----------------------------
 
@@ -94,34 +93,45 @@ for tool in tools:
         missing.append(tool)
 
 if missing:
-    console.print("\n[red]Missing tools detected[/red]")
+    console.print("\n[bold red]Missing tools detected[/bold red]")
     console.print("[yellow]Run install.sh first[/yellow]\n")
     sys.exit()
 ```
 
 # -----------------------------
 
-# Recon Functions
+# COMMAND RUNNER
 
 # -----------------------------
 
 def run_cmd(cmd):
 try:
-result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+result = subprocess.run(
+cmd,
+shell=True,
+capture_output=True,
+text=True
+)
 return result.stdout.strip()
 except Exception:
 return ""
 
+# -----------------------------
+
+# RECON MODULES
+
+# -----------------------------
+
 def subdomain_enum(domain):
-console.print("\n[cyan]Running subdomain enumeration...[/cyan]")
+console.print("\n[cyan]Subdomain Enumeration...[/cyan]")
 
 ```
 subs = set()
 
-output1 = run_cmd(f"subfinder -silent -d {domain}")
-output2 = run_cmd(f"amass enum -passive -d {domain}")
+out1 = run_cmd(f"subfinder -silent -d {domain}")
+out2 = run_cmd(f"amass enum -passive -d {domain}")
 
-for line in (output1 + "\n" + output2).splitlines():
+for line in (out1 + "\n" + out2).splitlines():
     if line.strip():
         subs.add(line.strip())
 
@@ -129,51 +139,56 @@ return list(subs)
 ```
 
 def live_hosts(subs):
-console.print("\n[cyan]Checking live hosts...[/cyan]")
+console.print("\n[cyan]Live Host Detection...[/cyan]")
 
 ```
+if not subs:
+    return []
+
 data = "\n".join(subs)
-output = run_cmd(f"echo '{data}' | httpx -silent -status-code")
+out = run_cmd(f"echo '{data}' | httpx -silent -status-code")
 
-return output.splitlines()
-```
-
-def url_mining(domain):
-console.print("\n[cyan]Collecting URLs...[/cyan]")
-
-```
-output = run_cmd(f"gau {domain}")
-
-sensitive = []
-for url in output.splitlines():
-    if any(x in url for x in ["admin", "login", ".zip", ".env", "backup", "api"]):
-        sensitive.append(url)
-
-return sensitive[:30]
+return out.splitlines()
 ```
 
 def port_scan(domain):
-console.print("\n[cyan]Scanning ports...[/cyan]")
+console.print("\n[cyan]Port Scanning...[/cyan]")
 
 ```
-output = run_cmd(f"nmap -T4 -F {domain}")
+out = run_cmd(f"nmap -T4 -F {domain}")
 
 ports = []
-for line in output.splitlines():
+for line in out.splitlines():
     if "/tcp" in line and "open" in line:
         ports.append(line.strip())
 
 return ports
 ```
 
+def url_mining(domain):
+console.print("\n[cyan]URL Collection...[/cyan]")
+
+```
+out = run_cmd(f"gau {domain}")
+
+sensitive = []
+keywords = ["admin", "login", ".env", ".zip", "backup", "api"]
+
+for url in out.splitlines():
+    if any(k in url for k in keywords):
+        sensitive.append(url)
+
+return sensitive[:30]
+```
+
 # -----------------------------
 
-# Output
+# OUTPUT
 
 # -----------------------------
 
 def show_results(subs, live, ports, urls):
-console.print("\n[bold green]--- RESULTS ---[/bold green]\n")
+console.print("\n[bold green]=== RESULTS ===[/bold green]\n")
 
 ```
 console.print("[cyan]Subdomains:[/cyan]")
@@ -195,7 +210,7 @@ for u in urls:
 
 # -----------------------------
 
-# Main
+# MAIN
 
 # -----------------------------
 
