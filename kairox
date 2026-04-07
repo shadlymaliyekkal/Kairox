@@ -1,11 +1,32 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# -------------------------------
+# KAIROX Launcher
+# -------------------------------
 
-# Fix PATH for Go tools
+# FIX: Use BASH_SOURCE[0] — works correctly when sourced or called via symlink
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export PATH="$PATH:$HOME/go/bin"
+VENV_PYTHON="$SCRIPT_DIR/venv/bin/python"
+KAIROX="$SCRIPT_DIR/kairox.py"
 
-# Run Python using venv
+# FIX: Check venv exists before trying to use it
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo "[!] Virtual environment not found."
+    echo "    Run './install.sh' first to set up KAIROX."
+    exit 1
+fi
 
-"$SCRIPT_DIR/venv/bin/python" "$SCRIPT_DIR/kairox.py" "$@"
+# FIX: Check kairox.py exists
+if [ ! -f "$KAIROX" ]; then
+    echo "[!] kairox.py not found in $SCRIPT_DIR"
+    exit 1
+fi
+
+# FIX: Respect existing GOPATH if set; fall back to ~/go/bin
+GOPATH_BIN="${GOPATH:-$HOME/go}/bin"
+export PATH="$PATH:$GOPATH_BIN"
+
+# FIX: Forward exit code from Python back to the caller
+exec "$VENV_PYTHON" "$KAIROX" "$@"
