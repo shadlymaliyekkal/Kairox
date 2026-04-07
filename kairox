@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Fix PATH for Go tools
+
+export PATH="$PATH:$HOME/go/bin"
+
+# Run Python using venv
+
+"$SCRIPT_DIR/venv/bin/python" "$SCRIPT_DIR/kairox.py" "$@"
